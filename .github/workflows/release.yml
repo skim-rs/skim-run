@@ -36,10 +36,10 @@ jobs:
       - name: Create archive
         env:
           BIN_NAME: "skim-run"
-          RELEASE_BIN: "skim-run-${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
+          ARCH: "${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
         run: |
           ls -R
-          cp "target/release/$BIN_NAME" "$RELEASE_BIN"
+          cp "target/$ARCH/release/$BIN_NAME" "$BIN_NAME-$ARCH"
       - name: Upload binary
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
