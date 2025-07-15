@@ -38,6 +38,7 @@ jobs:
           BIN_NAME: "skim-run"
           RELEASE_BIN: "skim-run-${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
         run: |
+          ls -R
           cp "target/release/$BIN_NAME" "$RELEASE_BIN"
       - name: Upload binary
         env:
