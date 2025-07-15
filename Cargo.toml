@@ -4,6 +4,7 @@ version = "0.1.9"
 edition = "2024"
 license = "MIT"
 description = "An interactive toolbox using skim"
+repository = "https://github.com/skim-rs/skim-run"
 
 [features]
 apps = ["dep:applications", "dep:viuer", "dep:image", "dep:fork" ]
