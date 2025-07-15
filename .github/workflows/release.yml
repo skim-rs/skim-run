@@ -44,6 +44,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_BIN: "skim-run-${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
+          TAG: ${{ github.ref_name }}
         run: |
-          TAG=$(echo "$GITHUB_REF" | sed 's#refs/tags/##')
           gh release upload "$TAG" "$ARCHIVE_NAME"
