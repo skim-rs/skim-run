@@ -5,6 +5,10 @@ use std::{
     process::Command,
 };
 
+use rink_core::{
+    CURRENCY_FILE, DATES_FILE, DEFAULT_FILE, ast, loader::gnu_units, output::QueryReply,
+    parsing::datetime,
+};
 use skim::{SkimItem, SkimOutput};
 
 use crate::{Mode, SkimRun};
@@ -28,12 +32,7 @@ impl SkimRun for Calc {
         opts.cmd(Some(format!(
             "{} calc --eval {}",
             std::env::args().next().unwrap(),
-            "{}"
-        )))
-        .preview(Some(format!(
-            "{} calc --eval {}",
-            std::env::args().next().unwrap(),
-            "{}"
+            "'{}'"
         )))
         .show_cmd_error(true)
         .interactive(true)
@@ -49,11 +48,11 @@ impl SkimRun for Calc {
     fn run(&self, output: &SkimOutput) -> anyhow::Result<()> {
         let result = eval(&output.cmd);
         let _ = Command::new("wl-copy")
-            .arg(&result.to_string())
+            .arg(format_result(&result))
             .spawn()
             .and_then(|mut h| h.wait());
-        save_result(result);
-        println!("{result}");
+        println!("{}", format_result(&result));
+        save_result(&result);
         Ok(())
     }
     fn init(&self, mode: &Mode) -> bool {
@@ -69,28 +68,65 @@ impl SkimRun for Calc {
     }
 }
 
-fn eval(expr: &str) -> f64 {
-    let ctx = eva::lex::FunctionContext::default();
-    let result: f64 = eva::eval_expr(&ctx, 12, expr, get_previous())
-        .or_else(|e| -> Result<f64, ()> {
-            panic!("Failed to evaluate {}: {}", expr, e);
+fn eval(expr: &str) -> QueryReply {
+    let mut ctx = rink_core::Context::new();
+
+    if let Some(f) = DATES_FILE {
+        ctx.load_dates(datetime::parse_datefile(&f));
+    }
+
+    let mut currency_defs = Vec::new();
+    match reqwest::blocking::get("https://rinkcalc.app/data/currency.json") {
+        Ok(response) => match response.json::<ast::Defs>() {
+            Ok(mut live_defs) => {
+                currency_defs.append(&mut live_defs.defs);
+            }
+            Err(why) => println!("Error parsing currency json: {}", why),
+        },
+        Err(why) => println!("Error fetching up-to-date currency conversions: {}", why),
+    }
+    if let Some(f) = CURRENCY_FILE {
+        currency_defs.append(&mut gnu_units::parse_str(f).defs);
+    }
+    let _ = ctx.load(ast::Defs {
+        defs: currency_defs,
+    });
+
+    if let Some(f) = DEFAULT_FILE {
+        let _ = ctx.load(gnu_units::parse_str(f));
+    }
+
+    ctx.set_time(chrono::Local::now());
+
+    let mut expr = String::from(expr);
+    if let Some(p) = get_previous() {
+        expr = expr.replace("_", &p);
+    }
+    let result = rink_core::eval(&mut ctx, &expr)
+        .or_else(|e| -> Result<QueryReply, ()> {
+            println!("Failed to evaluate {}: {}", expr, e);
+            panic!();
         })
         .unwrap();
     return result;
 }
 
-fn get_previous() -> Option<f64> {
+fn get_previous() -> Option<String> {
     File::open(PREV_RESULT_FILE)
         .and_then(|mut f| {
             let mut buf = String::new();
             let _ = f.read_to_string(&mut buf);
-            return Ok(buf.parse::<f64>().unwrap_or_default());
+            return Ok(buf);
         })
         .ok()
 }
-fn save_result(result: f64) {
+fn save_result(result: &QueryReply) {
     let f = File::create(PREV_RESULT_FILE);
     if f.is_ok() {
-        let _ = f.unwrap().write_all(result.to_string().as_bytes());
+        let _ = f.unwrap().write_all(format_result(result).as_bytes());
     }
+}
+fn format_result(result: &QueryReply) -> String {
+    let out = result.to_string();
+    out.split(" (").next().unwrap_or_default().to_string()
 }
