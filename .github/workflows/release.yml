@@ -38,17 +38,11 @@ jobs:
           BIN_NAME: "skim-run"
           RELEASE_BIN: "skim-run-${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
         run: |
-          cp "target/*/release/$BIN_NAME" "$RELEASE_BIN"
+          cp "target/release/$BIN_NAME" "$RELEASE_BIN"
       - name: Upload binary
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_BIN: "skim-run-${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
         run: |
           TAG=$(echo "$GITHUB_REF" | sed 's#refs/tags/##')
-          gh release upload "$TAG" "$RELEASE_BIN"
-      - name: Publish to crates.io
-        uses: houseabsolute/actions-rust-cross@v0
-        with:
-          command: publish
-          target: unknown-linux-musl-x86_64
-          args: "--release --locked"
+          gh release upload "$TAG" "$ARCHIVE_NAME"
