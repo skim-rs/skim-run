@@ -46,3 +46,9 @@ jobs:
         run: |
           TAG=$(echo "$GITHUB_REF" | sed 's#refs/tags/##')
           gh release upload "$TAG" "$RELEASE_BIN"
+      - name: Publish to crates.io
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: publish
+          target: unknown-linux-musl-x86_64
+          args: "--release --locked"
