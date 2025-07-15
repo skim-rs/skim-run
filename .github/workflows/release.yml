@@ -1,4 +1,4 @@
-name: Publish to crates.io
+name: Publish to crates.io and Upload Linux Binary
 
 on:
   release:
@@ -15,6 +15,18 @@ jobs:
         uses: actions/setup-rust@v1
         with:
           rust-version: stable
+
+      - name: Build Linux x86_64 binary
+        run: |
+          cargo build --release --target x86_64-unknown-linux-gnu
+          cp target/x86_64-unknown-linux-gnu/release/skim-run skim-run-x86_64-unknown-linux-gnu
+
+      - name: Upload Linux binary to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: skim-run-x86_64-unknown-linux-gnu
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to crates.io
         env:
