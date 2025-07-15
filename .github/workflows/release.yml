@@ -32,7 +32,7 @@ jobs:
         with:
           command: build
           target: ${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}
-          args: "--release --locked"
+          args: "--release --locked --features all"
       - name: Create archive
         env:
           BIN_NAME: "skim-run"
@@ -46,4 +46,4 @@ jobs:
           RELEASE_BIN: "skim-run-${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
           TAG: ${{ github.ref_name }}
         run: |
-          gh release upload "$TAG" "$ARCHIVE_NAME"
+          gh release upload "$TAG" "$RELEASE_BIN"
