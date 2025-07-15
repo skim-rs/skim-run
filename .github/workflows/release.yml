@@ -1,35 +1,48 @@
-name: Publish to crates.io and Upload Linux Binary
+name: Build and upload release binaries
+
+permissions:
+  contents: write
 
 on:
   release:
     types: [published]
 
 jobs:
-  publish:
+  build-binaries:
+    name: Build release binaries
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        arch:
+          - x86_64
+          - aarch64
+          - arm
+          - armv7
+        os:
+          - unknown-linux-musl
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Rust
-        uses: actions/setup-rust@v1
         with:
-          rust-version: stable
-
-      - name: Build Linux x86_64 binary
+          fetch-depth: 1
+      - name: Build
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: build
+          target: ${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}
+          args: "--release --locked"
+      - name: Create archive
+        env:
+          BIN_NAME: "skim-run"
+          RELEASE_BIN: "skim-run-${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
         run: |
-          cargo build --release --target x86_64-unknown-linux-gnu
-          cp target/x86_64-unknown-linux-gnu/release/skim-run skim-run-x86_64-unknown-linux-gnu
-
-      - name: Upload Linux binary to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: skim-run-x86_64-unknown-linux-gnu
+          cp "target/*/release/$BIN_NAME" "$RELEASE_BIN"
+      - name: Upload binary
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to crates.io
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          RELEASE_BIN: "skim-run-${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}"
         run: |
-          cargo publish --locked
+          TAG=$(echo "$GITHUB_REF" | sed 's#refs/tags/##')
+          gh release upload "$TAG" "$RELEASE_BIN"
