@@ -1,16 +1,14 @@
 [package]
 name = "skim-run"
-version = "0.1.0"
+version = "0.1.9"
 edition = "2024"
 
 [features]
-# Each mode is a feature
 apps = ["dep:applications", "dep:viuer", "dep:image", "dep:fork" ]
 calc = ["dep:eva"]
 hyprland = ["dep:serde_json", "dep:serde"]
 systemd = ["dep:zbus_systemd", "dep:smol"]
 default = ["apps", "calc"]
-all = ["apps", "calc", "hyprland", "systemd"]
 
 [dependencies]
 applications = { version = "0.3.1", optional = true}

@@ -32,7 +32,7 @@ jobs:
         with:
           command: build
           target: ${{ matrix.arch }}-${{ matrix.os }}${{ contains(matrix.arch, 'arm') && 'eabi' || '' }}
-          args: "--release --locked --features all"
+          args: "--release --locked --all-features"
       - name: Create archive
         env:
           BIN_NAME: "skim-run"
@@ -47,3 +47,16 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           gh release upload "$TAG" "$RELEASE_BIN"
+  cargo-publish:
+    name: Publish the app to crates.io
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Publish
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: publish
+          args: "--locked --all-features"

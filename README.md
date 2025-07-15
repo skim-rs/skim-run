@@ -14,10 +14,10 @@ A command-line utility and library for launching, searching, and managing applic
 Install from [crates.io](https://crates.io/crates/skim-run):
 
 ```sh
-cargo install skim-run --features <apps|calc|hyprland|systemd|all> [--no-default-features]
+cargo install skim-run --features <apps|calc|hyprland|systemd> [--no-default-features] [--all-features]
 ```
 By default, `apps` and `calc` are enabled.
-For example, if you want only the `apps` and `hyprctl-clients` modes: `cargo install skim-run --features apps,hyprland --no-default-features`. If you want everything: `cargo install skim-run --features all`
+For example, if you want only the `apps` and `hyprctl-clients` modes: `cargo install skim-run --features apps,hyprland --no-default-features`. If you want everything: `cargo install skim-run --all-features`
 
 ## About
 This repository also serves as a showcase for the capabilities of [skim](https://github.com/skim-rs/skim), demonstrating how to integrate fuzzy finding into Rust-based workflows and tools.
