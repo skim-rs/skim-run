@@ -63,6 +63,7 @@ impl SkimRun for Calc {
                 false
             }
             Mode::Calc { .. } => true,
+            #[allow(unreachable_patterns)]
             _ => true,
         }
     }

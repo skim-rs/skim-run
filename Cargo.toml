@@ -3,19 +3,25 @@ name = "skim-run"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+# Each mode is a feature
+apps = ["dep:applications", "dep:viuer", "dep:image", "dep:fork" ]
+calc = ["dep:eva"]
+hyprland = ["dep:serde_json", "dep:serde"]
+systemd = ["dep:zbus_systemd", "dep:smol"]
+default = ["apps", "calc"]
+all = ["apps", "calc", "hyprland", "systemd"]
+
 [dependencies]
-applications = "0.3.1"
-chrono = "0.4.41"
+applications = { version = "0.3.1", optional = true}
 clap = { version = "4.5.41", features = ["derive"] }
-enum_dispatch = "0.3.13"
-rink-core = { version = "0.8.0", features = ["bundle-files"] }
-serde = { version = "1.0.219", features = ["serde_derive"] }
-serde_json = "1.0.140"
 skim = "0.20.2"
-viuer = { version = "0.9.2", features = ["print-file"] }
-eva = { git = "https://github.com/oppiliappan/eva.git", rev = "3e3d36446614b90699cd93cd923b48bfceb26296" }
-zbus_systemd = { version = "0.25701.0", features = ["systemd1"] }
-smol = "2.0.2"
+viuer = { version = "0.9.2", features = ["print-file"], optional = true }
+eva = { git = "https://github.com/oppiliappan/eva.git", rev = "3e3d36446614b90699cd93cd923b48bfceb26296", optional = true }
+zbus_systemd = { version = "0.25701.0", features = ["systemd1"], optional = true }
+smol = { version = "2.0.2", optional = true }
 anyhow = "1.0.98"
-image = "0.25.6"
-fork = "0.2.0"
+image = { version = "0.25.6", optional = true }
+fork = { version = "0.2.0", optional = true }
+serde_json = { version = "1.0.140", optional = true }
+serde = { version = "1.0.219", optional = true, features = ["serde_derive"] }

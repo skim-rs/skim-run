@@ -3,10 +3,14 @@ use std::sync::Arc;
 
 use skim::{SkimItem, SkimOutput, prelude::SkimOptionsBuilder};
 
+#[cfg(feature = "apps")]
 pub mod apps;
+#[cfg(feature = "calc")]
 pub mod calc;
 pub mod cli;
+#[cfg(feature = "hyprland")]
 pub mod hyprctl_clients;
+#[cfg(feature = "systemd")]
 pub mod systemd_services;
 pub use cli::*;
 
