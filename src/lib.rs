@@ -28,8 +28,8 @@ pub trait SkimRun {
     }
 
     ///! Set SkimOptions
-    fn set_options<'a>(&self, opts: &'a mut SkimOptionsBuilder) -> &'a mut SkimOptionsBuilder {
-        return opts;
+    fn set_options<'a>(&self, opts: &'a mut skim::SkimOptions) {
+        let _ = opts;
     }
 
     ///! Run on the result from skim

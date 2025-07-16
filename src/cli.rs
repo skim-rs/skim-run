@@ -30,7 +30,7 @@ pub struct Cli {
     pub mode: Mode,
     #[arg(short, long, global = true)]
     pub query: Option<String>,
-    #[arg(short, long, global = true)]
+    #[arg(short, long, global = true, value_delimiter = ',')]
     pub modes: Vec<String>,
 }
 #[derive(Debug, Clone, clap::Subcommand)]
@@ -47,4 +47,17 @@ pub enum Mode {
     HyprctlClients {},
     #[cfg(feature = "systemd")]
     SystemdServices {},
+}
+impl ToString for Mode {
+    fn to_string(&self) -> String {
+        use Mode::*;
+        match self {
+            Apps { .. } => "apps".to_string(),
+            Calc { .. } => "calc".to_string(),
+            #[cfg(feature = "hyprland")]
+            HyprctlClients { .. } => "hyprctl-clients".to_string(),
+            #[cfg(feature = "systemd")]
+            SystemdServices { .. } => "systemd-services".to_string(),
+        }
+    }
 }

@@ -2902,6 +2902,7 @@ dependencies = [
  "rink-core",
  "serde",
  "serde_json",
+ "shlex",
  "skim",
  "smol",
  "viuer",

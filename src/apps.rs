@@ -103,8 +103,8 @@ impl SkimRun for Apps {
         }
         Ok(())
     }
-    fn set_options<'a>(&self, opts: &'a mut SkimOptionsBuilder) -> &'a mut SkimOptionsBuilder {
-        opts.preview(Some(String::new()))
-            .preview_window(String::from("left:16"))
+    fn set_options<'a>(&self, opts: &'a mut SkimOptions) {
+        opts.preview = Some(String::new());
+        opts.preview_window = String::from("left:16");
     }
 }

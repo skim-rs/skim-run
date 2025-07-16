@@ -25,25 +25,22 @@ impl SkimItem for Calc {
 }
 
 impl SkimRun for Calc {
-    fn set_options<'a>(
-        &self,
-        opts: &'a mut skim::prelude::SkimOptionsBuilder,
-    ) -> &'a mut skim::prelude::SkimOptionsBuilder {
-        opts.cmd(Some(format!(
+    fn set_options<'a>(&self, opts: &'a mut skim::prelude::SkimOptions) {
+        opts.cmd = Some(format!(
             "{} calc --eval {}",
             std::env::args().next().unwrap(),
             "'{}'"
-        )))
-        .show_cmd_error(true)
-        .interactive(true)
-        .bind(vec!["enter:accept(calc)".to_string()])
-        .header(Some(format!(
+        ));
+        opts.show_cmd_error = true;
+        opts.interactive = true;
+        opts.bind.extend(vec!["enter:accept(calc)".to_string()]);
+        opts.header = Some(format!(
             "calc - previous(_): {}",
             get_previous()
                 .and_then(|x| Some(x.to_string()))
                 .or(Some(String::from("N/A")))
                 .unwrap()
-        )))
+        ));
     }
     fn run(&self, output: &SkimOutput) -> anyhow::Result<()> {
         let result = eval(&output.cmd);

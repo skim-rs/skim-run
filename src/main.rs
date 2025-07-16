@@ -4,26 +4,37 @@ use skim::prelude::*;
 use skim_run::*;
 
 fn run_with(mode: &Box<dyn SkimRun>, args: &Cli) -> Result<Option<String>> {
-    let mut options_builder = SkimOptionsBuilder::default();
+    let mut env_options = vec!["sk".to_string()];
+    env_options.extend(
+        std::env::var("SKIM_DEFAULT_OPTIONS")
+            .ok()
+            .and_then(|val| shlex::split(&val))
+            .unwrap_or_default(),
+    );
+    let mut options = SkimOptions::parse_from(env_options);
 
     let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
 
-    let mut options_builder = mode
-        .set_options(&mut options_builder)
-        .query(args.query.clone());
-    if !args.modes.is_sorted() {
+    mode.set_options(&mut options);
+
+    options.query = args.query.clone();
+    if !args.modes.is_empty() {
         let current_mode_idx = args
             .modes
             .iter()
-            .position(|m| m.to_lowercase() == format!("{:?}", args.mode).to_lowercase())
+            .position(|m| m.to_lowercase() == args.mode.to_string().to_lowercase())
             .context("Current mode not found in enabled modes")?;
 
         let next_mode = args.modes[(current_mode_idx + 1) % args.modes.len()].clone();
-        options_builder = options_builder.bind(vec![format!("tab:accept({})", next_mode)]);
+        options
+            .bind
+            .extend(vec![format!("tab:accept({})", next_mode)]);
+        if let Some(h) = options.header {
+            options.header = Some(format!("{} --- next mode(tab): {}", h, next_mode));
+        } else {
+            options.header = Some(format!("next mode(tab): {}", next_mode));
+        }
     }
-    let options = options_builder
-        .build()
-        .context("Failed to build skim options")?;
     for item in mode.get() {
         let _ = tx_item.send(item);
     }
@@ -38,18 +49,11 @@ fn run_with(mode: &Box<dyn SkimRun>, args: &Cli) -> Result<Option<String>> {
 
     let _ = match output.final_event {
         Event::EvActAccept(Some(ref next_args)) => {
-            let _ = mode.run(&output);
             let mut next_args = next_args.replace("{q}", &output.query);
             next_args = next_args.replace("{cq}", &output.cmd);
-            next_args = next_args.replace(
-                "{}",
-                &output
-                    .selected_items
-                    .iter()
-                    .next()
-                    .context("Could not get selected item")?
-                    .output(),
-            );
+            if let Some(selected) = output.selected_items.iter().next() {
+                next_args = next_args.replace("{}", &selected.output());
+            }
             return Ok(Some(next_args));
         }
         Event::EvActAccept(None) => {
