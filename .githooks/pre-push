@@ -1,0 +1,17 @@
+#!/bin/sh
+
+read args
+
+echo $args
+
+ref=$(echo $args | cut -d' ' -f1)
+echo $ref
+
+if echo $ref | grep -q '^refs/tags'; then
+	TAG=$(echo $ref | sed 's#^refs/tags/##')
+	echo $TAG
+	sed -i 's/^\s*version\s*=\s*".*"\s*$/version = "'$TAG'"/' Cargo.toml
+	cargo update
+	git add Cargo.toml Cargo.lock
+	git commit --amend -C $ref --no-verify
+fi
