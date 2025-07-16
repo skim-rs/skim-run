@@ -2890,7 +2890,7 @@ checksum = "d8312ae7ca1a5883e68042b9c6bce05bfc12f06b814ecfda06c34abfb6c88175"
 
 [[package]]
 name = "skim-run"
-version = "0.3.9"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "applications",
