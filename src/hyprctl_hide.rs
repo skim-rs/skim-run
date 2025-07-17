@@ -120,10 +120,12 @@ impl SkimRun for HyprctlHide {
     }
 
     fn run(&self, _output: &SkimOutput) -> Result<()> {
-        // If swap argument is provided, perform the swap logic.
-        if let Some(target_addr) = &self.swap {
-            // Get binary name from argv[0]
-            let bin = std::env::args().next().unwrap_or_else(|| "skim-run".to_string());
+        // No-op: swap logic is handled in init()
+        Ok(())
+    }
+    fn init(&self, mode: &crate::Mode) -> bool {
+        // If swap argument is provided, perform the swap logic and exit.
+        if let crate::Mode::HyprctlHide { swap: Some(target_addr), .. } = mode {
             // Get currently focused window address
             let curr_json = std::process::Command::new("hyprctl")
                 .arg("activewindow")
@@ -136,7 +138,7 @@ impl SkimRun for HyprctlHide {
                 .unwrap_or("");
             // Move current window to hidden
             let _ = std::process::Command::new("hyprctl")
-                .args(&["dispatch", "movetoworkspacesilent", "special:hidden,address:".to_owned() + curr_addr])
+                .args(&["dispatch", "movetoworkspacesilent", &format!("special:hidden,address:{}", curr_addr)])
                 .status();
             // Move target window to current workspace
             let ws_json = std::process::Command::new("hyprctl")
@@ -155,7 +157,9 @@ impl SkimRun for HyprctlHide {
             let _ = std::process::Command::new("hyprctl")
                 .args(&["dispatch", "focuswindow", &format!("address:{}", target_addr)])
                 .status();
+            // Exit immediately, do not start TUI
+            return false;
         }
-        Ok(())
+        true
     }
 }
