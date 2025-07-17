@@ -10,6 +10,8 @@ pub mod calc;
 pub mod cli;
 #[cfg(feature = "hyprland")]
 pub mod hyprctl_clients;
+#[cfg(feature = "paru")]
+pub mod paru;
 #[cfg(feature = "systemd")]
 pub mod systemd_services;
 pub use cli::*;

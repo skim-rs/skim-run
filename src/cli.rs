@@ -5,6 +5,8 @@ use crate::apps;
 use crate::calc;
 #[cfg(feature = "hyprland")]
 use crate::hyprctl_clients;
+#[cfg(feature = "paru")]
+use crate::paru;
 #[cfg(feature = "systemd")]
 use crate::systemd_services;
 
@@ -19,6 +21,8 @@ pub fn parse_mode(mode: &Mode) -> Box<dyn SkimRun> {
         HyprctlClients {} => Box::new(hyprctl_clients::HyprctlClients),
         #[cfg(feature = "systemd")]
         SystemdServices {} => Box::new(systemd_services::SystemdServices),
+        #[cfg(feature = "paru")]
+        Paru {} => Box::new(paru::Paru),
         #[allow(unreachable_patterns)]
         _ => panic!("This mode is not enabled in this build. Enable the corresponding feature."),
     }
@@ -47,17 +51,23 @@ pub enum Mode {
     HyprctlClients {},
     #[cfg(feature = "systemd")]
     SystemdServices {},
+    #[cfg(feature = "paru")]
+    Paru {},
 }
 impl ToString for Mode {
     fn to_string(&self) -> String {
         use Mode::*;
         match self {
+            #[cfg(feature = "apps")]
             Apps { .. } => "apps".to_string(),
+            #[cfg(feature = "calc")]
             Calc { .. } => "calc".to_string(),
             #[cfg(feature = "hyprland")]
             HyprctlClients { .. } => "hyprctl-clients".to_string(),
             #[cfg(feature = "systemd")]
             SystemdServices { .. } => "systemd-services".to_string(),
+            #[cfg(feature = "paru")]
+            Paru { .. } => "paru".to_string(),
         }
     }
 }

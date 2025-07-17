@@ -11,7 +11,8 @@ apps = ["dep:applications", "dep:viuer", "dep:image", "dep:fork" ]
 calc = ["dep:rink-core", "dep:chrono", "dep:reqwest"]
 hyprland = ["dep:serde_json", "dep:serde"]
 systemd = ["dep:zbus_systemd", "dep:smol"]
-default = ["apps", "calc"]
+paru = []
+default = ["apps", "calc", "paru"]
 
 [dependencies]
 skim = "0.20.2"
