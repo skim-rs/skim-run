@@ -70,11 +70,13 @@ skim-run hyprctl-clients
 
 #### Hide, swap, and unhide windows (special workspace)
 ```sh
-skim-run hyprctl-hide
+skim-run hyprctl-hide [--ignore-class <CLASS>]
 ```
 - **Enter**: Swap the current window with a hidden one.
+  - If the currently focused window matches `--ignore-class`, the previously focused window (not ignored) will be hidden instead.
 - **Alt-Enter**: Unhide a window (move it to your current workspace).
 - Use this to keep your workspace clean and recall hidden windows instantly.
+- **Tip:** Use `--ignore-class <CLASS>` to prevent your floating terminal or other windows from being hidden or swapped.
 
 ### Systemd Service Manager
 ```sh
