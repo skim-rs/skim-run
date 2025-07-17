@@ -66,6 +66,7 @@ impl SkimItem for ClassWindow {
 #[derive(Clone)]
 pub struct HyprctlHide {
     pub ignore_class: Option<String>,
+    pub swap: Option<String>,
 }
 
 impl SkimRun for HyprctlHide {
@@ -109,27 +110,9 @@ impl SkimRun for HyprctlHide {
         // This is implemented as a shell script in the execute binding.
         opts.bind.extend(vec![
             format!(
-                "enter:execute(
-                    bash -c '
-                        IGNORE_CLASS=\"{ignore_class}\"
-                        CURR=$(hyprctl activewindow -j)
-                        CURR_ADDR=$(echo \"$CURR\" | jq -r .address)
-                        CURR_CLASS=$(echo \"$CURR\" | jq -r .class)
-                        if [ \"$CURR_CLASS\" = \"$IGNORE_CLASS\" ]; then
-                            # Find previously focused window not ignored
-                            PREV=$(hyprctl clients -j | jq -c \".[] | select(.class != \\\"$IGNORE_CLASS\\\")\" | jq -s \"sort_by(.focusHistoryID) | reverse | .[1]\")
-                            if [ \"$PREV\" != \"null\" ]; then
-                                PREV_ADDR=$(echo \"$PREV\" | jq -r .address)
-                                hyprctl dispatch movetoworkspacesilent special:hidden,address:$PREV_ADDR
-                            fi
-                        else
-                            hyprctl dispatch movetoworkspacesilent special:hidden,address:$CURR_ADDR
-                        fi
-                        WS=$(hyprctl activeworkspace -j | jq -r .id)
-                        hyprctl dispatch movetoworkspacesilent $WS,address:{}
-                        hyprctl dispatch focuswindow address:{}
-                    '
-                )",
+                "enter:execute({} hyprctl-hide --swap {})",
+                std::env::args().next().unwrap_or_else(|| "skim-run".to_string()),
+                "{}"
             ),
             // Alt-Enter: unhide selected window (move to current workspace and focus)
             "alt-enter:execute(hyprctl activeworkspace -j | jq -r .id | xargs -I{ws} hyprctl dispatch movetoworkspacesilent {ws},address:{} ; hyprctl dispatch focuswindow address:{})".to_string(),
@@ -137,7 +120,42 @@ impl SkimRun for HyprctlHide {
     }
 
     fn run(&self, _output: &SkimOutput) -> Result<()> {
-        // No-op: actions are handled by execute binds.
+        // If swap argument is provided, perform the swap logic.
+        if let Some(target_addr) = &self.swap {
+            // Get binary name from argv[0]
+            let bin = std::env::args().next().unwrap_or_else(|| "skim-run".to_string());
+            // Get currently focused window address
+            let curr_json = std::process::Command::new("hyprctl")
+                .arg("activewindow")
+                .arg("-j")
+                .output()
+                .map(|o| o.stdout)
+                .unwrap_or_default();
+            let curr_addr = serde_json::from_slice::<serde_json::Value>(&curr_json)
+                .and_then(|v| Ok(v.get("address").and_then(|a| a.as_str()).unwrap_or("")))
+                .unwrap_or("");
+            // Move current window to hidden
+            let _ = std::process::Command::new("hyprctl")
+                .args(&["dispatch", "movetoworkspacesilent", "special:hidden,address:".to_owned() + curr_addr])
+                .status();
+            // Move target window to current workspace
+            let ws_json = std::process::Command::new("hyprctl")
+                .arg("activeworkspace")
+                .arg("-j")
+                .output()
+                .map(|o| o.stdout)
+                .unwrap_or_default();
+            let ws_id = serde_json::from_slice::<serde_json::Value>(&ws_json)
+                .and_then(|v| Ok(v.get("id").and_then(|i| i.as_i64()).unwrap_or(1)))
+                .unwrap_or(1);
+            let _ = std::process::Command::new("hyprctl")
+                .args(&["dispatch", "movetoworkspacesilent", &format!("{},address:{}", ws_id, target_addr)])
+                .status();
+            // Focus the target window
+            let _ = std::process::Command::new("hyprctl")
+                .args(&["dispatch", "focuswindow", &format!("address:{}", target_addr)])
+                .status();
+        }
         Ok(())
     }
 }

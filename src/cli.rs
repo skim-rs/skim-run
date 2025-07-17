@@ -40,7 +40,7 @@ pub fn parse_mode(mode: &Mode) -> Box<dyn SkimRun> {
         #[cfg(feature = "hyprland")]
         HyprctlClients {} => Box::new(hyprctl_clients::HyprctlClients),
         #[cfg(feature = "hyprland")]
-        HyprctlHide { ignore_class } => Box::new(hyprctl_hide::HyprctlHide { ignore_class: ignore_class.clone() }),
+        HyprctlHide { ignore_class, swap } => Box::new(hyprctl_hide::HyprctlHide { ignore_class: ignore_class.clone(), swap: swap.clone() }),
         #[cfg(feature = "systemd")]
         SystemdServices {} => Box::new(systemd_services::SystemdServices),
         #[cfg(feature = "paru")]
@@ -75,6 +75,8 @@ pub enum Mode {
     HyprctlHide {
         #[arg(long)]
         ignore_class: Option<String>,
+        #[arg(long)]
+        swap: Option<String>,
     },
     #[cfg(feature = "systemd")]
     SystemdServices {},
