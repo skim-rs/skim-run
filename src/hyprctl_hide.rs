@@ -93,9 +93,9 @@ impl SkimRun for HyprctlHide {
             // Enter: swap current window with selected hidden window
             // 1. Move current window to special:hidden
             // 2. Move selected window to current workspace
-            "enter:execute(hyprctl activewindow -j | jq -r .address | xargs -I{} hyprctl dispatch movetoworkspacesilent special:hidden,address:{} ; hyprctl activeworkspace -j | jq -r .id | xargs -I{ws} hyprctl dispatch movetoworkspacesilent {ws},address:{} ; hyprctl dispatch focuswindow address:{})".to_string(),
+            "enter:execute(hyprctl activewindow -j | jq -r .address | xargs -I{} hyprctl dispatch movetoworkspacesilent special:hidden,address:{} ; hyprctl activeworkspace -j | jq -r .id | xargs -I{ws} hyprctl dispatch movetoworkspacesilent {ws},address:{} ; hyprctl dispatch focuswindow address:{})+accept".to_string(),
             // Alt-Enter: unhide selected window (move to current workspace and focus)
-            "alt-enter:execute(hyprctl activeworkspace -j | jq -r .id | xargs -I{ws} hyprctl dispatch movetoworkspacesilent {ws},address:{} ; hyprctl dispatch focuswindow address:{})".to_string(),
+            "alt-enter:execute(hyprctl activeworkspace -j | jq -r .id | xargs -I{ws} hyprctl dispatch movetoworkspacesilent {ws},address:{} ; hyprctl dispatch focuswindow address:{})+accept".to_string(),
         ]);
     }
 

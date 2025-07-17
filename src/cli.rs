@@ -21,7 +21,17 @@ use crate::systemd_services;
 /// This function does not return errors, but the returned `SkimRun` may fail at runtime.
 #[must_use]
 pub fn parse_mode(mode: &Mode) -> Box<dyn SkimRun> {
-    use Mode::{Apps, Calc, HyprctlClients, HyprctlHide, SystemdServices, Paru};
+    #[cfg(feature = "apps")]
+    use Mode::Apps;
+    #[cfg(feature = "calc")]
+    use Mode::Calc;
+    #[cfg(feature = "hyprland")]
+    use Mode::{HyprctlClients, HyprctlHide};
+    #[cfg(feature = "systemd")]
+    use Mode::SystemdServices;
+    #[cfg(feature = "paru")]
+    use Mode::Paru;
+
     match mode {
         #[cfg(feature = "apps")]
         Apps {} => Box::new(apps::Apps),
@@ -70,7 +80,17 @@ pub enum Mode {
 }
 impl std::fmt::Display for Mode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Mode::{Apps, Calc, HyprctlClients, HyprctlHide, SystemdServices, Paru};
+        #[cfg(feature = "apps")]
+        use Mode::Apps;
+        #[cfg(feature = "calc")]
+        use Mode::Calc;
+        #[cfg(feature = "hyprland")]
+        use Mode::{HyprctlClients, HyprctlHide};
+        #[cfg(feature = "systemd")]
+        use Mode::SystemdServices;
+        #[cfg(feature = "paru")]
+        use Mode::Paru;
+
         let s = match self {
             #[cfg(feature = "apps")]
             Apps { .. } => "apps",
