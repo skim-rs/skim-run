@@ -21,30 +21,22 @@ use crate::systemd_services;
 /// This function does not return errors, but the returned `SkimRun` may fail at runtime.
 #[must_use]
 pub fn parse_mode(mode: &Mode) -> Box<dyn SkimRun> {
-    #[cfg(feature = "apps")]
-    use Mode::Apps;
-    #[cfg(feature = "calc")]
-    use Mode::Calc;
-    #[cfg(feature = "hyprland")]
-    use Mode::{HyprctlClients, HyprctlHide};
-    #[cfg(feature = "systemd")]
-    use Mode::SystemdServices;
-    #[cfg(feature = "paru")]
-    use Mode::Paru;
-
     match mode {
         #[cfg(feature = "apps")]
-        Apps {} => Box::new(apps::Apps),
+        Mode::Apps {} => Box::new(apps::Apps),
         #[cfg(feature = "calc")]
-        Calc { .. } => Box::new(calc::Calc),
+        Mode::Calc { .. } => Box::new(calc::Calc),
         #[cfg(feature = "hyprland")]
-        HyprctlClients {} => Box::new(hyprctl_clients::HyprctlClients),
+        Mode::HyprctlClients {} => Box::new(hyprctl_clients::HyprctlClients),
         #[cfg(feature = "hyprland")]
-        HyprctlHide { ignore_class, swap } => Box::new(hyprctl_hide::HyprctlHide { ignore_class: ignore_class.clone(), swap: swap.clone() }),
+        Mode::HyprctlHide { ignore_class, swap } => Box::new(hyprctl_hide::HyprctlHide {
+            ignore_class: ignore_class.clone(),
+            swap: swap.clone(),
+        }),
         #[cfg(feature = "systemd")]
-        SystemdServices {} => Box::new(systemd_services::SystemdServices),
+        Mode::SystemdServices {} => Box::new(systemd_services::SystemdServices),
         #[cfg(feature = "paru")]
-        Paru {} => Box::new(paru::Paru),
+        Mode::Paru {} => Box::new(paru::Paru),
         #[allow(unreachable_patterns)]
         _ => panic!("This mode is not enabled in this build. Enable the corresponding feature."),
     }
@@ -85,30 +77,19 @@ pub enum Mode {
 }
 impl std::fmt::Display for Mode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        #[cfg(feature = "apps")]
-        use Mode::Apps;
-        #[cfg(feature = "calc")]
-        use Mode::Calc;
-        #[cfg(feature = "hyprland")]
-        use Mode::{HyprctlClients, HyprctlHide};
-        #[cfg(feature = "systemd")]
-        use Mode::SystemdServices;
-        #[cfg(feature = "paru")]
-        use Mode::Paru;
-
         let s = match self {
             #[cfg(feature = "apps")]
-            Apps { .. } => "apps",
+            Mode::Apps { .. } => "apps",
             #[cfg(feature = "calc")]
-            Calc { .. } => "calc",
+            Mode::Calc { .. } => "calc",
             #[cfg(feature = "hyprland")]
-            HyprctlClients { .. } => "hyprctl-clients",
+            Mode::HyprctlClients { .. } => "hyprctl-clients",
             #[cfg(feature = "hyprland")]
-            HyprctlHide { .. } => "hyprctl-hide",
+            Mode::HyprctlHide { .. } => "hyprctl-hide",
             #[cfg(feature = "systemd")]
-            SystemdServices { .. } => "systemd-services",
+            Mode::SystemdServices { .. } => "systemd-services",
             #[cfg(feature = "paru")]
-            Paru { .. } => "paru",
+            Mode::Paru { .. } => "paru",
         };
         write!(f, "{s}")
     }

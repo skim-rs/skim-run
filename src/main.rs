@@ -4,7 +4,7 @@
 use anyhow::{Context as _, Result};
 use clap::Parser;
 use skim::prelude::*;
-use skim_run::{SkimRun, Cli, parse_mode};
+use skim_run::{Cli, SkimRun, parse_mode};
 
 fn run_with(mode: &dyn SkimRun, args: &Cli) -> Result<Option<String>> {
     let mut env_options = vec!["sk".to_string()];

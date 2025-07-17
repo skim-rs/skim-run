@@ -26,18 +26,16 @@ impl SkimItem for Calc {
 
 impl SkimRun for Calc {
     fn set_options(&self, opts: &mut skim::prelude::SkimOptions) {
-        opts.cmd = Some(format!(
-            "{} calc --eval {}",
-            std::env::args().next().unwrap(),
-            "'{}'"
-        ));
+        let exe = std::env::current_exe()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|_| "skim-run".to_string());
+        opts.cmd = Some(format!("{} calc --eval {}", exe, "'{}'"));
         opts.show_cmd_error = true;
         opts.interactive = true;
         opts.bind.extend(vec!["enter:accept(calc)".to_string()]);
         opts.header = Some(format!(
             "calc - previous(_): {}",
-            get_previous()
-                .map_or(String::from("N/A"), |x| x.to_string())
+            get_previous().map_or(String::from("N/A"), |x| x.to_string())
         ));
     }
     fn run(&self, output: &SkimOutput) -> anyhow::Result<()> {
