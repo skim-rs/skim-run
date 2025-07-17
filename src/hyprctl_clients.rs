@@ -27,7 +27,7 @@ impl SkimRun for HyprctlClients {
         let mut clients: Vec<Client> =
             serde_json::from_slice(&res).expect("Failed to parse clients from JSON");
         clients.sort_unstable_by(|a, b| a.focusHistoryID.cmp(&b.focusHistoryID));
-        return clients
+        clients
             .into_iter()
             .filter_map(|c| {
                 if c.focusHistoryID == 0 {
@@ -35,7 +35,7 @@ impl SkimRun for HyprctlClients {
                 }
                 Some(Arc::new(c) as Arc<dyn SkimItem>)
             })
-            .collect();
+            .collect()
     }
     fn run(&self, output: &skim::SkimOutput) -> anyhow::Result<()> {
         let result = output
@@ -45,7 +45,7 @@ impl SkimRun for HyprctlClients {
         let _ = Command::new("hyprctl")
             .arg("dispatch")
             .arg("focuswindow")
-            .arg(&format!("address:{}", result.output()))
+            .arg(format!("address:{}", result.output()))
             .spawn()
             .context("Failed to run hyprctl dispatch focuswindow")?
             .wait();
@@ -55,9 +55,9 @@ impl SkimRun for HyprctlClients {
 
 impl SkimItem for Client {
     fn text(&self) -> std::borrow::Cow<str> {
-        return Cow::Borrowed(&self.title);
+        Cow::Borrowed(&self.title)
     }
     fn output(&self) -> std::borrow::Cow<str> {
-        return Cow::Borrowed(&self.address);
+        Cow::Borrowed(&self.address)
     }
 }

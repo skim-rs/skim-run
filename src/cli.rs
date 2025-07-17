@@ -5,13 +5,23 @@ use crate::apps;
 use crate::calc;
 #[cfg(feature = "hyprland")]
 use crate::hyprctl_clients;
+#[cfg(feature = "hyprland")]
+use crate::hyprctl_hide;
 #[cfg(feature = "paru")]
 use crate::paru;
 #[cfg(feature = "systemd")]
 use crate::systemd_services;
 
+/// Parses the CLI mode and returns the corresponding `SkimRun` implementation.
+///
+/// # Panics
+/// Panics if the mode is not enabled in this build.
+///
+/// # Errors
+/// This function does not return errors, but the returned `SkimRun` may fail at runtime.
+#[must_use]
 pub fn parse_mode(mode: &Mode) -> Box<dyn SkimRun> {
-    use Mode::*;
+    use Mode::{Apps, Calc, HyprctlClients, HyprctlHide, SystemdServices, Paru};
     match mode {
         #[cfg(feature = "apps")]
         Apps {} => Box::new(apps::Apps),
@@ -19,6 +29,8 @@ pub fn parse_mode(mode: &Mode) -> Box<dyn SkimRun> {
         Calc { .. } => Box::new(calc::Calc),
         #[cfg(feature = "hyprland")]
         HyprctlClients {} => Box::new(hyprctl_clients::HyprctlClients),
+        #[cfg(feature = "hyprland")]
+        HyprctlHide {} => Box::new(hyprctl_hide::HyprctlHide),
         #[cfg(feature = "systemd")]
         SystemdServices {} => Box::new(systemd_services::SystemdServices),
         #[cfg(feature = "paru")]
@@ -49,25 +61,30 @@ pub enum Mode {
     },
     #[cfg(feature = "hyprland")]
     HyprctlClients {},
+    #[cfg(feature = "hyprland")]
+    HyprctlHide {},
     #[cfg(feature = "systemd")]
     SystemdServices {},
     #[cfg(feature = "paru")]
     Paru {},
 }
-impl ToString for Mode {
-    fn to_string(&self) -> String {
-        use Mode::*;
-        match self {
+impl std::fmt::Display for Mode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use Mode::{Apps, Calc, HyprctlClients, HyprctlHide, SystemdServices, Paru};
+        let s = match self {
             #[cfg(feature = "apps")]
-            Apps { .. } => "apps".to_string(),
+            Apps { .. } => "apps",
             #[cfg(feature = "calc")]
-            Calc { .. } => "calc".to_string(),
+            Calc { .. } => "calc",
             #[cfg(feature = "hyprland")]
-            HyprctlClients { .. } => "hyprctl-clients".to_string(),
+            HyprctlClients { .. } => "hyprctl-clients",
+            #[cfg(feature = "hyprland")]
+            HyprctlHide { .. } => "hyprctl-hide",
             #[cfg(feature = "systemd")]
-            SystemdServices { .. } => "systemd-services".to_string(),
+            SystemdServices { .. } => "systemd-services",
             #[cfg(feature = "paru")]
-            Paru { .. } => "paru".to_string(),
-        }
+            Paru { .. } => "paru",
+        };
+        write!(f, "{s}")
     }
 }

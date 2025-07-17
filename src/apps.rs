@@ -28,8 +28,7 @@ impl SkimItem for App {
     fn text(&self) -> Cow<str> {
         if self.app.name.is_empty() {
             Cow::Borrowed(
-                &self
-                    .app
+                self.app
                     .app_desktop_path
                     .file_name()
                     .unwrap()
@@ -42,9 +41,9 @@ impl SkimItem for App {
             Cow::Borrowed(&self.app.name)
         }
     }
-    fn preview(&self, _context: PreviewContext) -> ItemPreview {
-        let width = _context.width as u32;
-        let height = _context.height as u32;
+    fn preview(&self, context: PreviewContext) -> ItemPreview {
+        let width = u32::try_from(context.width).unwrap_or(16);
+        let height = u32::try_from(context.height).unwrap_or(16);
         let size = min(16, min(height, width));
         if self.icon_path.is_some() {
             let conf = viuer::Config {
@@ -62,7 +61,7 @@ impl SkimItem for App {
             let _ = viuer::print_from_file(self.icon_path.clone().unwrap(), &conf);
         }
 
-        return ItemPreview::Text(String::new());
+        ItemPreview::Text(String::new())
     }
     fn output(&self) -> Cow<str> {
         if self.app_path_exe.is_some() {
@@ -103,7 +102,7 @@ impl SkimRun for Apps {
         }
         Ok(())
     }
-    fn set_options<'a>(&self, opts: &'a mut SkimOptions) {
+    fn set_options(&self, opts: &mut SkimOptions) {
         opts.preview = Some(String::new());
         opts.preview_window = String::from("left:16");
     }

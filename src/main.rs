@@ -1,9 +1,12 @@
+#![warn(clippy::all)]
+#![warn(clippy::pedantic)]
+
 use anyhow::{Context as _, Result};
 use clap::Parser;
 use skim::prelude::*;
-use skim_run::*;
+use skim_run::{SkimRun, Cli, parse_mode};
 
-fn run_with(mode: &Box<dyn SkimRun>, args: &Cli) -> Result<Option<String>> {
+fn run_with(mode: &dyn SkimRun, args: &Cli) -> Result<Option<String>> {
     let mut env_options = vec!["sk".to_string()];
     env_options.extend(
         std::env::var("SKIM_DEFAULT_OPTIONS")
@@ -17,7 +20,7 @@ fn run_with(mode: &Box<dyn SkimRun>, args: &Cli) -> Result<Option<String>> {
 
     mode.set_options(&mut options);
 
-    options.query = args.query.clone();
+    options.query.clone_from(&args.query);
     if !args.modes.is_empty() {
         let current_mode_idx = args
             .modes
@@ -30,9 +33,9 @@ fn run_with(mode: &Box<dyn SkimRun>, args: &Cli) -> Result<Option<String>> {
             .bind
             .extend(vec![format!("tab:accept({})", next_mode)]);
         if let Some(h) = options.header {
-            options.header = Some(format!("{} --- next mode(tab): {}", h, next_mode));
+            options.header = Some(format!("{h} --- next mode(tab): {next_mode}"));
         } else {
-            options.header = Some(format!("next mode(tab): {}", next_mode));
+            options.header = Some(format!("next mode(tab): {next_mode}"));
         }
     }
     for item in mode.get() {
@@ -51,7 +54,7 @@ fn run_with(mode: &Box<dyn SkimRun>, args: &Cli) -> Result<Option<String>> {
         Event::EvActAccept(Some(ref next_args)) => {
             let mut next_args = next_args.replace("{q}", &output.query);
             next_args = next_args.replace("{cq}", &output.cmd);
-            if let Some(selected) = output.selected_items.iter().next() {
+            if let Some(selected) = output.selected_items.first() {
                 next_args = next_args.replace("{}", &selected.output());
             }
             return Ok(Some(next_args));
@@ -73,7 +76,7 @@ fn main() -> Result<()> {
         if !mode.init(&cli.mode) {
             return Ok(());
         }
-        match run_with(&mode, &cli) {
+        match run_with(&*mode, &cli) {
             Ok(Some(args)) => cli.update_from(
                 [
                     vec![
@@ -82,7 +85,7 @@ fn main() -> Result<()> {
                             .context("Failed to get executable name")?
                             .as_str(),
                     ],
-                    args.split(" ").collect(),
+                    args.split(' ').collect(),
                 ]
                 .iter()
                 .flatten(),

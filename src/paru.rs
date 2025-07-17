@@ -24,7 +24,7 @@ pub struct Paru;
 impl SkimRun for Paru {
     fn get(&self) -> Vec<Arc<dyn SkimItem>> {
         Command::new("paru")
-            .args(&["-S", "--list"])
+            .args(["-S", "--list"])
             .output()
             .expect("Failed to list packages")
             .stdout
@@ -43,7 +43,7 @@ impl SkimRun for Paru {
             })
             .collect()
     }
-    fn set_options<'a>(&self, opts: &'a mut skim::SkimOptions) {
+    fn set_options(&self, opts: &mut skim::SkimOptions) {
         opts.preview = Some(String::new());
         opts.delimiter = String::from(r"[ \t\[\]()]+");
         opts.bind.extend_from_slice(&[

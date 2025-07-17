@@ -25,7 +25,7 @@ impl SkimItem for Calc {
 }
 
 impl SkimRun for Calc {
-    fn set_options<'a>(&self, opts: &'a mut skim::prelude::SkimOptions) {
+    fn set_options(&self, opts: &mut skim::prelude::SkimOptions) {
         opts.cmd = Some(format!(
             "{} calc --eval {}",
             std::env::args().next().unwrap(),
@@ -37,9 +37,7 @@ impl SkimRun for Calc {
         opts.header = Some(format!(
             "calc - previous(_): {}",
             get_previous()
-                .and_then(|x| Some(x.to_string()))
-                .or(Some(String::from("N/A")))
-                .unwrap()
+                .map_or(String::from("N/A"), |x| x.to_string())
         ));
     }
     fn run(&self, output: &SkimOutput) -> anyhow::Result<()> {
@@ -58,8 +56,6 @@ impl SkimRun for Calc {
                 println!("{}", eval(&expr.join(" ")));
                 false
             }
-            Mode::Calc { .. } => true,
-            #[allow(unreachable_patterns)]
             _ => true,
         }
     }
@@ -69,7 +65,7 @@ fn eval(expr: &str) -> QueryReply {
     let mut ctx = rink_core::Context::new();
 
     if let Some(f) = DATES_FILE {
-        ctx.load_dates(datetime::parse_datefile(&f));
+        ctx.load_dates(datetime::parse_datefile(f));
     }
 
     let mut currency_defs = Vec::new();
@@ -78,9 +74,9 @@ fn eval(expr: &str) -> QueryReply {
             Ok(mut live_defs) => {
                 currency_defs.append(&mut live_defs.defs);
             }
-            Err(why) => println!("Error parsing currency json: {}", why),
+            Err(why) => println!("Error parsing currency json: {why}"),
         },
-        Err(why) => println!("Error fetching up-to-date currency conversions: {}", why),
+        Err(why) => println!("Error fetching up-to-date currency conversions: {why}"),
     }
     if let Some(f) = CURRENCY_FILE {
         currency_defs.append(&mut gnu_units::parse_str(f).defs);
@@ -97,30 +93,28 @@ fn eval(expr: &str) -> QueryReply {
 
     let mut expr = String::from(expr);
     if let Some(p) = get_previous() {
-        expr = expr.replace("_", &p);
+        expr = expr.replace('_', &p);
     }
-    let result = rink_core::eval(&mut ctx, &expr)
-        .or_else(|e| -> Result<QueryReply, ()> {
-            println!("Failed to evaluate {}: {}", expr, e);
+    rink_core::eval(&mut ctx, &expr)
+        .map_err(|e| {
+            println!("Failed to evaluate {expr}: {e}");
             panic!();
         })
-        .unwrap();
-    return result;
+        .unwrap()
 }
 
 fn get_previous() -> Option<String> {
     File::open(PREV_RESULT_FILE)
-        .and_then(|mut f| {
+        .map(|mut f| {
             let mut buf = String::new();
             let _ = f.read_to_string(&mut buf);
-            return Ok(buf);
+            buf
         })
         .ok()
 }
 fn save_result(result: &QueryReply) {
-    let f = File::create(PREV_RESULT_FILE);
-    if f.is_ok() {
-        let _ = f.unwrap().write_all(format_result(result).as_bytes());
+    if let Ok(mut file) = File::create(PREV_RESULT_FILE) {
+        let _ = file.write_all(format_result(result).as_bytes());
     }
 }
 fn format_result(result: &QueryReply) -> String {

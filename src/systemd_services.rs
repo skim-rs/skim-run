@@ -64,28 +64,22 @@ journalctl --{} -xreu {}
 pub struct SystemdServices;
 
 fn bind_systemctl(key: &str, cmd: &str) -> String {
-    format!(
-        "{}:execute(systemctl {} --{{2}} {{3}})+accept(--query {{q}} systemd-services)",
-        key, cmd
-    )
+    format!("{key}:execute(systemctl {cmd} --{{2}} {{3}})+accept(--query {{q}} systemd-services)")
 }
 
 impl SkimRun for SystemdServices {
-    fn set_options<'a>(
-        &self,
-        opts: &'a mut skim::prelude::SkimOptionsBuilder,
-    ) -> &'a mut skim::prelude::SkimOptionsBuilder {
-        opts.preview(Some(String::new()))
-            .bind(vec![
-                bind_systemctl("ctrl-r", "restart"),
-                bind_systemctl("ctrl-s", "stop"),
-                bind_systemctl("ctrl-s", "start"),
-            ])
-            .preview_window(String::from("up:80%"))
-            .delimiter(String::from(r"[\[\] \t]+"))
-            .header(Some(String::from(
-                "systemctl - restart: ^r | stop: ^s | start: ^t",
-            )))
+    fn set_options(&self, opts: &mut skim::SkimOptions) {
+        opts.preview = Some(String::new());
+        opts.preview_window = String::from("up:80%");
+        opts.delimiter = String::from(r"[\[\] \t]+");
+        opts.header = Some(String::from(
+            "systemctl - restart: ^r | stop: ^s | start: ^t",
+        ));
+        opts.bind.extend(vec![
+            bind_systemctl("ctrl-r", "restart"),
+            bind_systemctl("ctrl-s", "stop"),
+            bind_systemctl("ctrl-s", "start"),
+        ]);
     }
     fn get(&self) -> Vec<std::sync::Arc<dyn SkimItem>> {
         let system_units: Vec<Arc<dyn SkimItem>> = smol::block_on(async {
@@ -95,7 +89,7 @@ impl SkimRun for SystemdServices {
             let manager = zbus_systemd::systemd1::ManagerProxy::new(&conn)
                 .await
                 .unwrap();
-            manager.list_units().await.to_owned()
+            manager.list_units().await.clone()
         })
         .expect("Failed to list systemd units")
         .into_iter()
@@ -139,7 +133,7 @@ impl SkimRun for SystemdServices {
             let manager = zbus_systemd::systemd1::ManagerProxy::new(&conn)
                 .await
                 .unwrap();
-            manager.list_units().await.to_owned()
+            manager.list_units().await.clone()
         })
         .expect("Failed to list systemd units")
         .into_iter()
