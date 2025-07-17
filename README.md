@@ -23,11 +23,11 @@ cargo install skim-run --features <apps|calc|hyprland|systemd|paru> [--no-defaul
 ```
 
 - By default, `apps` and `calc` are enabled.
-- To install only specific modes (e.g. apps + hyprctl-clients):  
+- To install only specific modes (e.g. apps + hyprctl-clients):
   ```sh
   cargo install skim-run --features apps,hyprland --no-default-features
   ```
-- To enable everything:  
+- To enable everything:
   ```sh
   cargo install skim-run --all-features
   ```
@@ -55,7 +55,7 @@ Fuzzy-search and launch any installed application.
 skim-run calc
 ```
 - Evaluate interactively, or:
-- One-shot eval:  
+- One-shot eval:
   ```sh
   skim-run calc --eval "2 + 2 * 10"
   ```
@@ -82,7 +82,7 @@ skim-run systemd-services
 ```
 - Start, stop, restart, and inspect services with fuzzy search.
 
-### Paru/AUR Package Search (if enabled)
+### Paru/AUR Package Search (if enabled, work in progress)
 ```sh
 skim-run paru
 ```
